@@ -16,8 +16,10 @@
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "importHelpers": true,
+    "skipLibCheck":true,
     "target": "ES2022",
     "module": "ES2022",
+    "types": ["long"],
     "useDefineForClassFields": false,
     "lib": [
       "ES2022",
