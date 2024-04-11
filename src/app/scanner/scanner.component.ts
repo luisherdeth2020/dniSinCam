@@ -77,7 +77,6 @@ export class ScannerComponent implements OnInit {
     window.addEventListener('resize', this.resizeCanvas.bind(this));
     this.resizeCanvas();
     // this.startVideo();
-
   }
 
   resizeCanvas() {
@@ -116,10 +115,10 @@ export class ScannerComponent implements OnInit {
         this.captureBox.height
       );
 
-      console.log('x--',this.captureBox.x);
-      console.log('y--',this.captureBox.y);
-      console.log('width---',this.captureBox.width);
-      console.log('height---',this.captureBox.height);
+      console.log('x--', this.captureBox.x);
+      console.log('y--', this.captureBox.y);
+      console.log('width---', this.captureBox.width);
+      console.log('height---', this.captureBox.height);
 
       // Dibujar el asa de redimensionamiento
       ctx.fillStyle = '#FF0000';
@@ -142,31 +141,24 @@ export class ScannerComponent implements OnInit {
       const videoWidth = this.video.nativeElement.videoWidth;
       const videoHeight = this.video.nativeElement.videoHeight;
 
-      // Calcular las proporciones entre el cuadro de selección y las dimensiones reales del video
-      const widthRatio = videoWidth / this.canvas.nativeElement.width;
-      const heightRatio = videoHeight / this.canvas.nativeElement.height;
+      // Configurar el tamaño del lienzo capturado para que coincida con las dimensiones del video original
+      capturedCanvas.width = videoWidth;
+      capturedCanvas.height = videoHeight;
 
-      // Calcular la posición y el tamaño del cuadro de captura en relación con el video original
-      const captureBoxX = this.captureBox.x * widthRatio;
-      const captureBoxY = this.captureBox.y * heightRatio;
-      const captureBoxWidth = this.captureBox.width * widthRatio;
-      const captureBoxHeight = this.captureBox.height * heightRatio;
-
-      // Configurar el tamaño del lienzo capturado para que coincida con las dimensiones del cuadro de captura
-      capturedCanvas.width = captureBoxWidth;
-      capturedCanvas.height = captureBoxHeight;
+      // Dibujar el video en el lienzo capturado en su tamaño original
+      capturedCtx.drawImage(this.video.nativeElement, 0, 0, videoWidth, videoHeight);
 
       // Dibujar el cuadro de captura en el lienzo capturado, ajustando las proporciones del video original
       capturedCtx.drawImage(
-        this.video.nativeElement,
-        captureBoxX,
-        captureBoxY,
-        captureBoxWidth,
-        captureBoxHeight,
+        capturedCanvas,
+        this.captureBox.x,
+        this.captureBox.y,
+        this.captureBox.width,
+        this.captureBox.height,
         0,
         0,
-        captureBoxWidth,
-        captureBoxHeight
+        this.captureBox.width,
+        this.captureBox.height
       );
 
       // Obtener la URL de la imagen del lienzo capturado en base64
@@ -183,10 +175,114 @@ export class ScannerComponent implements OnInit {
   }
 
 
+  startMoving(event: MouseEvent) {
+    const mouseX =
+      event.clientX - this.canvas.nativeElement.getBoundingClientRect().left;
+    const mouseY =
+      event.clientY - this.canvas.nativeElement.getBoundingClientRect().top;
+
+    if (
+      mouseX > this.captureBox.x &&
+      mouseX < this.captureBox.x + this.captureBox.width &&
+      mouseY > this.captureBox.y &&
+      mouseY < this.captureBox.y + this.captureBox.height
+    ) {
+      this.resizing = false;
+      this.canvas.nativeElement.addEventListener(
+        'mousemove',
+        this.move.bind(this)
+      );
+    }
+  }
+
+  move(event: MouseEvent) {
+    const mouseX =
+      event.clientX - this.canvas.nativeElement.getBoundingClientRect().left;
+    const mouseY =
+      event.clientY - this.canvas.nativeElement.getBoundingClientRect().top;
+
+    const offsetX = mouseX - this.captureBox.width / 2;
+    const offsetY = mouseY - this.captureBox.height / 2;
+
+    this.captureBox.x = offsetX;
+    this.captureBox.y = offsetY;
+
+    this.drawCaptureBox();
+  }
+  stopMoving() {
+    this.canvas.nativeElement.removeEventListener(
+      'mousemove',
+      this.move.bind(this)
+    );
+  }
+
+  startTouchMoving(event: TouchEvent) {
+    const touch = event.touches[0];
+    const touchX = touch.clientX - this.canvas.nativeElement.getBoundingClientRect().left;
+    const touchY = touch.clientY - this.canvas.nativeElement.getBoundingClientRect().top;
+
+    // Verificar si el toque está dentro del cuadro de selección
+    const isInsideBox =
+      touchX > this.captureBox.x &&
+      touchX < this.captureBox.x + this.captureBox.width &&
+      touchY > this.captureBox.y &&
+      touchY < this.captureBox.y + this.captureBox.height;
+
+    // Verificar si el toque está en el borde del cuadro de selección para redimensionar
+    const isRightEdge =
+      touchX > this.captureBox.x + this.captureBox.width - this.resizeHandleSize &&
+      touchX < this.captureBox.x + this.captureBox.width &&
+      touchY > this.captureBox.y &&
+      touchY < this.captureBox.y + this.captureBox.height;
+
+    const isBottomEdge =
+      touchY > this.captureBox.y + this.captureBox.height - this.resizeHandleSize &&
+      touchY < this.captureBox.y + this.captureBox.height &&
+      touchX > this.captureBox.x &&
+      touchX < this.captureBox.x + this.captureBox.width;
+
+    if (isInsideBox && !isRightEdge && !isBottomEdge) {
+      // Si el toque está dentro del cuadro pero no en el borde, activamos el modo de movimiento
+      this.resizing = false;
+      this.canvas.nativeElement.addEventListener('touchmove', this.touchMove.bind(this));
+    } else if ((isRightEdge || isBottomEdge) && !this.resizing) {
+      // Si el toque está en el borde y no estamos ya redimensionando, activamos el modo de redimensionamiento
+      this.resizing = true;
+      this.canvas.nativeElement.addEventListener('touchmove', this.touchMove.bind(this));
+    }
+  }
 
 
 
+touchMove(event: TouchEvent) {
+  const touch = event.touches[0];
+  const touchX = touch.clientX - this.canvas.nativeElement.getBoundingClientRect().left;
+  const touchY = touch.clientY - this.canvas.nativeElement.getBoundingClientRect().top;
 
+  if (!this.resizing) {
+    // Modo de movimiento del cuadro
+    const offsetX = touchX - this.captureBox.width / 2;
+    const offsetY = touchY - this.captureBox.height / 2;
+
+    this.captureBox.x = offsetX;
+    this.captureBox.y = offsetY;
+
+    this.drawCaptureBox();
+  } else {
+    // Modo de redimensionamiento
+    const newWidth = touchX - this.captureBox.x;
+    const newHeight = touchY - this.captureBox.y;
+
+    this.captureBox.width = Math.max(newWidth, this.resizeHandleSize);
+    this.captureBox.height = Math.max(newHeight, this.resizeHandleSize);
+
+    this.drawCaptureBox();
+  }
+}
+
+stopTouchMoving() {
+  this.canvas.nativeElement.removeEventListener('touchmove', this.touchMove.bind(this));
+}
 
 
 

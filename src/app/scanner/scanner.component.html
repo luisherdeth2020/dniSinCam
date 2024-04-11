@@ -57,12 +57,12 @@
 <video
   #video
   autoplay
-  style="position: absolute; width: 100%; height: 80%; object-fit: cover"
+  style="position: absolute; top: 0; width: 100%;"
 ></video>
 
 <canvas
   #canvas
-  style="position: relative; width: 100%; height: 80%; object-fit: cover"
+  style="position: absolute; top: 0; width: 100%;"
   (touchstart)="startResizing($event)"
   (touchmove)="resize($event)"
   (touchend)="stopResizing()"

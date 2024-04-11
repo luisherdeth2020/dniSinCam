@@ -7,7 +7,6 @@
   align-items: center;
 } */
 
-/*  */
 
 .focus-box {
   border: 2px dashed #00FF00; /* Color verde para el cuadro de enfoque */
@@ -17,15 +16,10 @@
   overflow: hidden;
   cursor: se-resize; /* Cambia el cursor para indicar que se puede redimensionar */
 }
-.canvas-container {
-  height: 80%; /* Ajusta la altura del contenedor al 80% de su contenedor padre */
-  position: relative; /* Asegura que el posicionamiento relativo funcione correctamente */
-}
-
 
 button {
   position: absolute;
-  bottom: 20px;
+  bottom: 200px;
   left: 50%;
   transform: translateX(-50%);
 }
@@ -35,4 +29,7 @@ button {
   bottom: 70px;
   left: 50%;
   transform: translateX(-50%);
+}
+img{
+  bottom: -50px;
 }
